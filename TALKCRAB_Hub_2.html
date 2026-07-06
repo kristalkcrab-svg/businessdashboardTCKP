@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TALKCRAB 匠蟹 · 管理平台</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --red:#C8102E;--blue:#1B3A6B;--blue-light:#E8EEF7;
+  --green:#059669;--purple:#7C3AED;
+  --bg:#F0F2F7;--border:#E2E5EC;--white:#fff;
+  --muted:#6B7280;--text:#1A1D24;
+}
+body{font-family:'Segoe UI',-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);overflow:hidden;}
+
+/* ── TOPBAR ── */
+.topbar{
+  height:52px;background:var(--blue);display:flex;align-items:center;
+  justify-content:space-between;padding:0 20px;position:fixed;top:0;left:0;right:0;z-index:100;
+}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-text{color:#fff;font-size:16px;font-weight:800;letter-spacing:1px;}
+.logo-sub{color:rgba(232,238,247,.6);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+.clock{color:rgba(232,238,247,.75);font-size:12px;font-variant-numeric:tabular-nums;}
+.outlet-badge{background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.5px;}
+
+/* ── TABS ── */
+.tabbar{
+  height:46px;background:var(--white);border-bottom:2px solid var(--border);
+  display:flex;position:fixed;top:52px;left:0;right:0;z-index:99;
+  box-shadow:0 2px 8px rgba(0,0,0,.06);
+}
+.tab{
+  flex:1;display:flex;align-items:center;justify-content:center;gap:7px;
+  font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;
+  border-bottom:3px solid transparent;transition:all .2s;border:none;background:none;
+  font-family:inherit;letter-spacing:.3px;
+}
+.tab:hover{color:var(--text);background:var(--bg);}
+.tab.active{color:var(--red);border-bottom:3px solid var(--red);background:var(--white);}
+.tab-icon{font-size:16px;}
+.tab-label{display:flex;flex-direction:column;align-items:flex-start;}
+.tab-zh{font-size:12px;font-weight:700;line-height:1.2;}
+.tab-en{font-size:10px;font-weight:400;color:var(--muted);letter-spacing:.3px;}
+.tab.active .tab-en{color:rgba(200,16,46,.6);}
+
+/* ── FRAME AREA ── */
+.frame-area{position:fixed;top:98px;left:0;right:0;bottom:0;}
+.frame-wrap{position:absolute;inset:0;display:none;}
+.frame-wrap.active{display:block;}
+iframe.app-frame{width:100%;height:100%;border:none;display:block;}
+
+/* ── FALLBACK ── */
+.fallback{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:100%;gap:16px;background:var(--bg);
+}
+.fallback-icon{font-size:48px;}
+.fallback-title{font-size:18px;font-weight:700;color:var(--text);}
+.fallback-msg{font-size:13px;color:var(--muted);text-align:center;max-width:340px;line-height:1.7;}
+.open-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--blue);color:#fff;padding:12px 24px;border-radius:10px;
+  font-size:14px;font-weight:700;text-decoration:none;margin-top:4px;
+  transition:opacity .15s;
+}
+.open-btn:hover{opacity:.88;}
+.loading-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;background:var(--bg);}
+.spinner{width:36px;height:36px;border:3px solid var(--blue-light);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-txt{font-size:13px;color:var(--muted);}
+</style>
+</head>
+<body>
+
+<!-- ── TOPBAR ── -->
+<div class="topbar">
+  <div class="logo">
+    <div>
+      <div class="logo-text">TALKCRAB 匠蟹</div>
+      <div class="logo-sub">Management Hub · Kepong</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="clock" id="clock"></div>
+    <div class="outlet-badge">KEPONG</div>
+  </div>
+</div>
+
+<!-- ── TABS ── -->
+<div class="tabbar">
+  <button class="tab active" data-tab="sales" onclick="showTab('sales',this)">
+    <span class="tab-icon">📊</span>
+    <div class="tab-label"><span class="tab-zh">业绩</span><span class="tab-en">Performance</span></div>
+  </button>
+  <button class="tab" data-tab="goods" onclick="showTab('goods',this)">
+    <span class="tab-icon">📦</span>
+    <div class="tab-label"><span class="tab-zh">货物</span><span class="tab-en">Operations</span></div>
+  </button>
+  <button class="tab" data-tab="mgmt" onclick="showTab('mgmt',this)">
+    <span class="tab-icon">👥</span>
+    <div class="tab-label"><span class="tab-zh">管理</span><span class="tab-en">Management</span></div>
+  </button>
+</div>
+
+<!-- ── FRAMES ── -->
+<div class="frame-area">
+
+  <!-- 业绩 -->
+  <div class="frame-wrap active" id="wrap-sales">
+    <div class="loading-wrap" id="loading-sales">
+      <div class="spinner"></div>
+      <div class="loading-txt">正在加载业绩数据… Loading performance data…</div>
+    </div>
+    <iframe class="app-frame" id="frame-sales"
+      src="https://kepong-operation.vercel.app/"
+      title="业绩 Dashboard"
+      onload="frameLoaded('sales')"
+      onerror="frameFailed('sales','https://kepong-operation.vercel.app/')">
+    </iframe>
+  </div>
+
+  <!-- 货物 / 运营清单 -->
+  <div class="frame-wrap" id="wrap-goods">
+    <div class="loading-wrap" id="loading-goods">
+      <div class="spinner"></div>
+      <div class="loading-txt">正在加载运营清单… Loading operations checklist…</div>
+    </div>
+    <iframe class="app-frame" id="frame-goods"
+      src="TALKCRAB_Dashboard_9.html?k=tc-hub-9938"
+      title="运营清单 Operations Checklist"
+      onload="frameLoaded('goods')"
+      onerror="frameFailed('goods','TALKCRAB_Dashboard_9.html?k=tc-hub-9938')">
+    </iframe>
+  </div>
+
+  <!-- 管理 -->
+  <div class="frame-wrap" id="wrap-mgmt">
+    <div class="loading-wrap" id="loading-mgmt">
+      <div class="spinner"></div>
+      <div class="loading-txt">正在加载员工系统… Loading management system…</div>
+    </div>
+    <iframe class="app-frame" id="frame-mgmt"
+      src="https://management-system-nu-peach.vercel.app/"
+      title="Management System"
+      onload="frameLoaded('mgmt')"
+      onerror="frameFailed('mgmt','https://management-system-nu-peach.vercel.app/')">
+    </iframe>
+  </div>
+
+</div>
+
+<script>
+// ── TAB SWITCHING ──────────────────────────────────
+function showTab(name, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.frame-wrap').forEach(w => w.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('wrap-' + name).classList.add('active');
+}
+
+// ── IFRAME LOAD HANDLERS ──────────────────────────
+
+function frameLoaded(name) {
+  const loading = document.getElementById('loading-' + name);
+  const frame = document.getElementById('frame-' + name);
+  
+  // Try to detect X-Frame-Options block (frame loads but shows blank page from blocked origin)
+  try {
+    const doc = frame.contentDocument || frame.contentWindow.document;
+    // If we can access the document and it has content, it loaded fine
+    if (doc && doc.body && doc.body.innerHTML.trim().length > 0) {
+      loading.style.display = 'none';
+      frame.style.display = 'block';
+      return;
+    }
+  } catch(e) {
+    // Cross-origin frame (expected for external sites) — that's fine, still loaded
+    loading.style.display = 'none';
+    frame.style.display = 'block';
+    return;
+  }
+  
+  // Blank page — possibly X-Frame-Options blocked
+  loading.style.display = 'none';
+  if (name === 'goods') {
+    // Local file — might just be path issue
+    showFallback(name, getTabUrl(name),
+      'TALKCRAB_Dashboard_9.html 需要和此文件放在同一个文件夹内。',
+      '请把 TALKCRAB_Dashboard_9.html 和本文件放在同一目录，然后重新打开。');
+  } else {
+    showFallback(name, getTabUrl(name),
+      '此页面不支持在框架内嵌入 (X-Frame-Options)。',
+      '点击下方按钮在新窗口开启完整界面。');
+  }
+}
+
+function frameFailed(name, url) {
+  document.getElementById('loading-' + name).style.display = 'none';
+  showFallback(name, url, '无法加载此页面。', '点击下方按钮直接开启。');
+}
+
+function getTabUrl(name) {
+  const urls = {
+    sales: 'https://kepong-operation.vercel.app/',
+    goods: 'TALKCRAB_Dashboard_9.html',
+    mgmt:  'https://management-system-nu-peach.vercel.app/',
+  };
+  return urls[name];
+}
+
+function showFallback(name, url, title, msg) {
+  const frame = document.getElementById('frame-' + name);
+  frame.style.display = 'none';
+  const wrap = document.getElementById('wrap-' + name);
+  const icons = { sales:'📊', goods:'📦', mgmt:'👥' };
+  const div = document.createElement('div');
+  div.className = 'fallback';
+  div.innerHTML = `
+    <div class="fallback-icon">${icons[name]}</div>
+    <div class="fallback-title">${title}</div>
+    <div class="fallback-msg">${msg}</div>
+    <a class="open-btn" href="${url}" target="_blank">↗ 在新窗口开启 Open in New Tab</a>
+  `;
+  wrap.appendChild(div);
+}
+
+// ── CLOCK ─────────────────────────────────────────
+function updateClock() {
+  const now = new Date();
+  const d = now.toLocaleDateString('zh-CN', {month:'short', day:'numeric', weekday:'short'});
+  const t = now.toLocaleTimeString('zh-CN', {hour:'2-digit', minute:'2-digit'});
+  document.getElementById('clock').textContent = `${d}  ${t}`;
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+// ── HIDE FRAMES INITIALLY (show after load) ────────
+document.querySelectorAll('.app-frame').forEach(f => f.style.display = 'none');
+
+// Goods frame: check after short delay if it failed silently
+setTimeout(() => {
+  const frame = document.getElementById('frame-goods');
+  const loading = document.getElementById('loading-goods');
+  if (loading.style.display !== 'none') {
+    // Still loading after 5s — probably local file path issue
+    frameLoaded('goods');
+  }
+}, 5000);
+</script>
+</body>
+</html>
