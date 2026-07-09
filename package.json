@@ -1,0 +1,9 @@
+{
+  "name": "talkcrab-kepong-operation",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.0",
+    "googleapis": "^144.0.0"
+  }
+}
