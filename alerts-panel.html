@@ -1,0 +1,48 @@
+<!--
+alerts-panel.html
+把这一整块直接贴进你 kepong-operation dashboard 主页面的 HTML 里，
+放在你想要它出现的位置（比如顶部或侧边栏），会显示最新预警状态，每 60 秒自动刷新一次。
+-->
+<div id="tc-alerts-panel" style="font-family: -apple-system, sans-serif; border: 1px solid #eee; border-radius: 10px; padding: 14px; max-width: 420px;">
+  <div style="font-weight: 600; font-size: 14px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+    <span>🦀 营运预警</span>
+    <span id="tc-alerts-updated" style="font-weight: 400; font-size: 11px; color: #999;"></span>
+  </div>
+  <div id="tc-alerts-list" style="font-size: 13px; line-height: 1.6;">载入中...</div>
+</div>
+
+<script>
+(function () {
+  const listEl = document.getElementById('tc-alerts-list');
+  const updatedEl = document.getElementById('tc-alerts-updated');
+
+  async function loadAlerts() {
+    try {
+      const res = await fetch('/api/get-alerts?limit=5');
+      const data = await res.json();
+      const alerts = data.alerts || [];
+
+      if (alerts.length === 0) {
+        listEl.innerHTML = '<div style="color:#999;">暂无记录</div>';
+        return;
+      }
+
+      listEl.innerHTML = alerts.map(a => {
+        const color = a.status === 'active' ? '#c0392b' : '#27ae60';
+        const icon = a.status === 'active' ? '⚠️' : '✅';
+        const time = new Date(a.timestamp).toLocaleString('zh-CN', { hour12: false });
+        return `<div style="margin-bottom:6px; color:${color};">${icon} ${a.message}
+                  <div style="font-size:10px; color:#aaa;">${time}</div>
+                </div>`;
+      }).join('');
+
+      updatedEl.textContent = '更新: ' + new Date().toLocaleTimeString('zh-CN', { hour12: false });
+    } catch (err) {
+      listEl.innerHTML = '<div style="color:#c0392b;">读取失败</div>';
+    }
+  }
+
+  loadAlerts();
+  setInterval(loadAlerts, 60000); // 每60秒刷新
+})();
+</script>
